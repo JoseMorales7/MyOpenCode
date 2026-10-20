@@ -16,6 +16,32 @@ describe.skipIf(process.platform === "win32")("custom web launcher", () => {
     const missing = await launch(["--binary", "/nonexistent/custom-opencode"])
     expect(missing.code).toBe(1)
     expect(missing.stderr).toContain("Custom executable not found")
+    expect(missing.stderr).toContain("setup-custom-web.sh")
+  })
+
+  test("uses the installed bundle's recorded executable path", async () => {
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "opencode-web-recorded-"))
+    try {
+      const repo = path.join(root, "checkout")
+      const bundle = path.join(repo, ".cache/quoted-side-chat/myopencode-cli")
+      await fs.mkdir(path.join(repo, "script"), { recursive: true })
+      await fs.copyFile(launcher, path.join(repo, "script/run-custom-web.sh"))
+      await fs.mkdir(path.join(bundle, "cli-linux-x64-baseline/bin"), { recursive: true })
+      await Bun.write(path.join(bundle, "launcher-path"), "cli-linux-x64-baseline/bin/opencode\n")
+      await Bun.write(
+        path.join(bundle, "cli-linux-x64-baseline/bin/opencode"),
+        "#!/usr/bin/env bash\nprintf 'RECORDED CUSTOM BUILD\\n'\n",
+      )
+      await fs.chmod(path.join(bundle, "cli-linux-x64-baseline/bin/opencode"), 0o700)
+      const child = Bun.spawnSync(
+        ["bash", path.join(repo, "script/run-custom-web.sh"), "--profile", path.join(root, "profile")],
+        { stdout: "pipe", stderr: "pipe" },
+      )
+      expect(child.exitCode).toBe(0)
+      expect(child.stdout.toString()).toContain("RECORDED CUSTOM BUILD")
+    } finally {
+      await fs.rm(root, { recursive: true, force: true })
+    }
   })
 
   test("executes the chosen build in the project with isolated profile paths and no inherited service credentials", async () => {

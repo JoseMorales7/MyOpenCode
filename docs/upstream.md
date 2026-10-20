@@ -1,5 +1,20 @@
 # OpenCode baseline
 
+## Installation-reliability follow-up
+
+- Current maintained checkout: `/home/jose/code/MyOpenCode/opencode`, fork
+  <https://github.com/JoseMorales7/MyOpenCode.git>, clean `main` at
+  `ae31cd8cd8902f5aec1f3b1390768b0501f699f0` before this task. `origin/dev` is not present in this fork; no upstream reset,
+  fetch, branch replacement, or application changes were performed for setup work.
+- Upstream ancestry remains the OpenCode `2.0.28` source described below. The MyOpenCode branding and prior custom features
+  are committed in this fork and must be preserved.
+- User-reported failure: Bun `1.4.3` on Linux x64 cannot resolve the local workspace `@opencode/script` while running the
+  CLI build with `--skip-install` on another checkout. That package is a CLI devDependency, linked by installing from the
+  monorepo root. The build's version policy is `^1.4.2`, so Bun `1.4.3` is compatible.
+- Setup now runs a frozen development workspace install before probing build-tool resolution, builds in a dedicated
+  staging directory, verifies the resulting executable, then publishes the complete bundle to the launcher's canonical
+  `myopencode-cli` location. Existing profiles and live services are out of scope.
+
 ## Source inspected for the web side-chat plan
 
 - Repository: <https://github.com/anomalyco/opencode.git>

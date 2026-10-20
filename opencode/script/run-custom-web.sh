@@ -2,7 +2,9 @@
 set -euo pipefail
 
 repo="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd -P)"
-binary="$repo/.cache/quoted-side-chat/myopencode-cli/cli-linux-x64/bin/opencode"
+bundle="$repo/.cache/quoted-side-chat/myopencode-cli"
+binary=""
+binary_set=false
 profile="${XDG_DATA_HOME:-$HOME/.local/share}/opencode-quoted-side-chat"
 project="$PWD"
 port=4097
@@ -40,7 +42,7 @@ while (($#)); do
       case "$1" in
         --port) port="$2" ;;
         --profile) profile="$2" ;;
-        --binary) binary="$2" ;;
+        --binary) binary="$2"; binary_set=true ;;
       esac
       shift 2
       ;;
@@ -73,13 +75,19 @@ port=$((10#$port))
 [[ -n "$profile" ]] || die "Profile directory cannot be empty"
 [[ -d "$project" ]] || die "Project directory does not exist: $project"
 [[ "$profile" == /* ]] || profile="$PWD/$profile"
+if [[ "$binary_set" == false ]]; then
+  binary="$bundle/cli-linux-x64/bin/opencode"
+  if [[ -f "$bundle/launcher-path" ]]; then
+    IFS= read -r entry < "$bundle/launcher-path" || die "Cannot read custom bundle metadata. Run $repo/script/setup-custom-web.sh again."
+    binary="$bundle/$entry"
+  fi
+fi
+[[ -n "$binary" ]] || die "Executable path cannot be empty"
 [[ "$binary" == /* ]] || binary="$PWD/$binary"
 
 if [[ ! -f "$binary" || ! -x "$binary" ]]; then
   printf 'Custom executable not found: %s\n' "$binary" >&2
-  printf 'Install this checkout\047s dependencies with Bun 1.4.2, then build it:\n\n' >&2
-  printf '  cd %q\n' "$repo/packages/cli" >&2
-  printf '  OPENCODE_CHANNEL=local OPENCODE_VERSION=2.0.28-quoted-side-chat bun run build -- --single --skip-install --outdir=%q\n' "$repo/.cache/quoted-side-chat/myopencode-cli" >&2
+  printf 'Install dependencies and build this checkout with:\n\n  %q\n' "$repo/script/setup-custom-web.sh" >&2
   exit 1
 fi
 

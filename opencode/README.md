@@ -115,6 +115,17 @@ If you're interested in contributing to OpenCode, please read our [contributing 
 
 ### Local web customization
 
+Install or rebuild MyOpenCode from this repository root, then start its separate web server:
+
+```sh
+./script/setup-custom-web.sh
+./script/run-custom-web.sh
+```
+
+Setup checks Bun compatibility, installs the full workspace with the frozen lockfile, builds and verifies the complete
+custom bundle, and only then replaces the launcher's build. It does not overwrite your installed CLI or restart its
+service. Bun 1.4.3 is supported by this checkout's `^1.4.2` build requirement.
+
 This checkout adds source-aware quoted questions and temporary side conversations. See
 [quoted questions and side chats](./docs/quoted-side-chat.md) for behavior, context modes, development checks, and packaged
 delivery notes. This customization is not an official OpenCode release.
